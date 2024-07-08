@@ -2,9 +2,10 @@
 
 ## How to run
 1. Start a Docker daemon
-2. Run `poetry install`
+2. Create a `.env` file in a repository root specifying `QODANA_TOKEN`
 3. Modify `conf/config.yaml` to your liking
-4. Run `poetry run python3 main.py`
+4. Run `poetry install`
+5. Run `poetry run python3 main.py`
 
 ## Data format
 The repos list should be a `.jsonl` file with the following fields:

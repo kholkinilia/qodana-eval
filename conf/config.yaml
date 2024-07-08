@@ -1,0 +1,28 @@
+data:
+  language:
+    type: kotlin
+    kotlin:
+      repos_list_path: './data/kotlin/kotlin_repos_debug.jsonl'
+      results_dir: './data/kotlin/qodana_results'
+      timeout: 600 # TODO: implement
+    java:
+      repos_list_path: './data/java/java_repos.jsonl'
+      results_dir: './data/java/qodana_results'
+      timeout: 600 # TODO: implement
+  source:
+    type: github # [github, s3]
+    github:
+    s3: # TODO: implement
+
+docker:
+  qodana_image:
+    java: 'jetbrains/qodana-jvm'
+    kotlin: 'jetbrains/qodana-jvm'
+
+operation:
+  dirs:
+    tmp: './tmp'
+    repo_data: './tmp/repo_data'
+  pool_config:
+    max_workers: 8
+    chunksize: 1

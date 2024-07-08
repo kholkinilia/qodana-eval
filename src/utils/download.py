@@ -25,7 +25,6 @@ def download_github_repo_zip(repository_name, commit_sha, output_archive_path):
         with open(output_archive_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=128):
                 file.write(chunk)
-        print(f"Repository '{repository_name}' at commit '{commit_sha}' has been downloaded to '{output_archive_path}'.")
         return True
     else:
         print(
@@ -57,7 +56,6 @@ def prepare_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
     extract_to = str(os.path.join(cfg.operation.dirs.repo_data, get_repo_dir_name(repo_name, commit_sha)))
     with zipfile.ZipFile(archive_path, 'r') as archive:
         archive.extractall(extract_to)
-    print(f"Files extracted to '{extract_to}'")
 
     # Check that there's only one repo there
     assert len(os.listdir(extract_to)) == 1  # There should be only the repo inside

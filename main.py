@@ -35,11 +35,15 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
     environment = {
         'QODANA_TOKEN': os.environ.get('QODANA_TOKEN'),
     }
-    print("Running QODANA:")
-    container = docker_client.containers.run(image=cfg.docker.qodana_image[cfg.data.language.type],
-                                             volumes=volumes,
-                                             environment=environment,
-                                             )
+    try:
+        container = docker_client.containers.run(image=cfg.docker.qodana_image[cfg.data.language.type],
+                                                 volumes=volumes,
+                                                 environment=environment,
+                                                 )
+    except docker.errors.ContainerError as e:
+        # Error, while running a container
+        # TODO: handle
+        pass
     # TODO: implement timeouts
     # TODO: implement real-time clearing
 

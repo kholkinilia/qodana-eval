@@ -1,8 +1,18 @@
+import shutil
+
 import requests
 from omegaconf import DictConfig
 import os
 from src.utils.paths import get_repo_archive_filename, get_repo_dir_name
 import zipfile
+
+
+def _get_archive_path(repo_name: str, commit_sha: str, cfg: DictConfig):
+    return str(os.path.join(cfg.operation.dirs.repo_data, get_repo_archive_filename(repo_name, commit_sha)))
+
+
+def _get_repo_dir_path(repo_name: str, commit_sha: str, cfg: DictConfig):
+    return str(os.path.join(cfg.operation.dirs.repo_data, get_repo_dir_name(repo_name, commit_sha)))
 
 
 def download_github_repo_zip(repository_name, commit_sha, output_archive_path):
@@ -49,11 +59,11 @@ def prepare_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
     """
 
     # Download an archive
-    archive_path = str(os.path.join(cfg.operation.dirs.repo_data, get_repo_archive_filename(repo_name, commit_sha)))
+    archive_path = _get_archive_path(repo_name, commit_sha, cfg)
     download_github_repo_zip(repo_name, commit_sha, archive_path)
 
     # Extract an archive
-    extract_to = str(os.path.join(cfg.operation.dirs.repo_data, get_repo_dir_name(repo_name, commit_sha)))
+    extract_to = _get_repo_dir_path(repo_name, commit_sha, cfg)
     with zipfile.ZipFile(archive_path, 'r') as archive:
         archive.extractall(extract_to)
 
@@ -62,3 +72,13 @@ def prepare_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
 
     # Return the repo name of the project
     return os.listdir(extract_to)[0]
+
+
+def clear_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
+    archive_path = _get_archive_path(repo_name, commit_sha, cfg)
+    if os.path.exists(archive_path):
+        os.remove(archive_path)
+
+    repo_dir = _get_repo_dir_path(repo_name, commit_sha, cfg)
+    if os.path.exists(repo_dir):
+        shutil.rmtree(repo_dir)

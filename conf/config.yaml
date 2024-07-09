@@ -1,28 +1,45 @@
 data:
   language:
-    type: kotlin
+    type: java
     kotlin:
       repos_list_path: './data/kotlin/kotlin_repos_debug.jsonl'
-      results_dir: './data/kotlin/qodana_results'
-      timeout: 600 # TODO: implement
+      result_paths:
+        qodana_archives: './data/kotlin/qodana_results'
+        jsonl: './data/kotlin/results.jsonl'
+      timeout: 600
     java:
-      repos_list_path: './data/java/java_repos.jsonl'
-      results_dir: './data/java/qodana_results'
-      timeout: 600 # TODO: implement
+      repos_list_path: './data/java/java_repos_debug.jsonl'
+      result_paths:
+        qodana_archives: './data/java/qodana_results'
+        jsonl: './data/java/results.jsonl'
+      timeout: 600
+    python:
+      repos_list_path: './data/python/python_repos.jsonl'
+      result_paths:
+        qodana_archives: './data/python/qodana_results'
+        jsonl: './data/python/results.jsonl'
+      timeout: 600
   source:
     type: github # [github, s3]
     github:
     s3: # TODO: implement
 
 docker:
-  qodana_image:
+  qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html
     java: 'jetbrains/qodana-jvm'
     kotlin: 'jetbrains/qodana-jvm'
+    python: 'jetbrains/qodana-python'
 
 operation:
   dirs:
     tmp: './tmp'
     repo_data: './tmp/repo_data'
+    json_results: './tmp/results/json'
+    qodana_results: './tmp/results/qodana'
   pool_config:
-    max_workers: 8
+    max_workers: 1
     chunksize: 1
+
+exit_codes:
+  timeout: -127
+  unknown_failure: -999

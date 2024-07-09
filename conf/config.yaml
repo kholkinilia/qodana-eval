@@ -1,14 +1,14 @@
 data:
   language:
-    type: java
+    type: kotlin
     kotlin:
-      repos_list_path: './data/kotlin/kotlin_repos_debug.jsonl'
+      repos_list_path: './data/kotlin/kotlin_repos.jsonl'
       result_paths:
         qodana_archives: './data/kotlin/qodana_results'
         jsonl: './data/kotlin/results.jsonl'
       timeout: 600
     java:
-      repos_list_path: './data/java/java_repos_debug.jsonl'
+      repos_list_path: './data/java/java_repos.jsonl'
       result_paths:
         qodana_archives: './data/java/qodana_results'
         jsonl: './data/java/results.jsonl'

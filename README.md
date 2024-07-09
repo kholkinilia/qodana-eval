@@ -28,17 +28,18 @@ This file contains jsons, one for each repository, of the following structure:
 - `commit_sha`: a commit_sha of the desired version of the repo
 - `exit_code`: exit code of Qodana or if timeout or unknown errors happened the respective codes from config are used
 - `execution_time`: roughly execution time in seconds to run a Qodana container over the repo. Calculated using python
-- `result_archive_name`: a name of the archive containing Qodana results directory with all of Qodana logs and results 
   time library...
+- `result_archive_name`: a name of the archive containing Qodana results directory with all of Qodana logs and results
 
 An example for one repo:
+
 ```json
 {
-  "repo_name": "tcurdt/jdeb", 
-  "commit_sha": "8f4fc5a14b7a116d72fad627c8e7a31d946783b3"
-  "exit_code": 0, 
-  "execution_time": 87.95895314216614, 
-  "result_archive_name": "tcurdt_jdeb_8f4fc5a14b7a116d72fad627c8e7a31d946783b3.zip", 
+  "repo_name": "tcurdt/jdeb",
+  "commit_sha": "8f4fc5a14b7a116d72fad627c8e7a31d946783b3",
+  "exit_code": 0,
+  "execution_time": 87.95895314216614,
+  "result_archive_name": "tcurdt_jdeb_8f4fc5a14b7a116d72fad627c8e7a31d946783b3.zip"
 }
 ```
 
@@ -49,4 +50,5 @@ They are saved at the directory specified at `data.language.<language type>.resu
 file.
 
 ## Disclaimer
+
 Even though the example configs for python are provided, the script was not tested on Python language.

@@ -1,7 +1,8 @@
 import time
-
 import hydra
 import requests.exceptions
+from datasets import load_dataset
+from huggingface_hub import HfApi
 from omegaconf import DictConfig
 from dotenv import load_dotenv
 import os
@@ -76,6 +77,21 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
     json_result["result_archive_name"] = result_archive_name
     shutil.make_archive(result_archive_path[:-len('.zip')], 'zip', result_path)
 
+    # Upload archive to huggingface if necessary
+    if cfg.data.target.type == "huggingface":
+        api = HfApi()
+
+        api.upload_file(
+            path_or_fileobj=result_archive_path,
+            path_in_repo=os.path.join('qodana_archives', cfg.data.language.type, result_archive_name),
+            repo_id=cfg.data.target.huggingface.repo_id,
+            repo_type="dataset"
+        )
+
+        # Remove local archive if necessary
+        if not cfg.data.target.huggingface.keep_local_archives:
+            os.remove(result_archive_path)
+
     # Save json to a temporary file (to have some data saved in case execution fails)
     json_result_path = os.path.join(cfg.operation.dirs.json_results, f"{get_repo_dir_name(repo_name, commit_sha)}.json")
     with open(json_result_path, 'w') as f:
@@ -101,9 +117,26 @@ def main(cfg: DictConfig) -> None:
     json_results = process_map(run_qodana, repos['repo_name'].to_list(), repos['revision'].to_list(), repeat(cfg),
                                **cfg.operation.pool_config)
 
-    with open(cfg.data.language[cfg.data.language.type].result_paths.jsonl, 'w') as f:
+    # Create jsonl file with results
+    jsonl_path = cfg.data.language[cfg.data.language.type].result_paths.jsonl
+    with open(jsonl_path, 'w') as f:
         for json_line in json_results:
             f.write(json.dumps(json_line) + "\n")
+
+    # Save to huggingface if necessary
+    if cfg.data.target.type == "huggingface":
+
+        dataset = load_dataset('json', data_files=jsonl_path)
+        dataset['train'].push_to_hub(cfg.data.target.huggingface.repo_id, split=cfg.data.language.type)
+
+        # Remove jsonl if required
+        if not cfg.data.target.huggingface.keep_local_jsonl:
+            os.remove(jsonl_path)
+
+        # Remove the empty repo, where archives were stored if it's indeed empty and if required
+        if not cfg.data.target.huggingface.keep_local_archives and not any(
+                os.scandir(cfg.data.language[cfg.data.language.type].result_paths.qodana_archives)):
+            shutil.rmtree(cfg.data.language[cfg.data.language.type].result_paths.qodana_archives)
 
     # Remove tmp dir and its contents
     shutil.rmtree(cfg.operation.dirs.tmp)

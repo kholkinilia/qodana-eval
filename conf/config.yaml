@@ -23,6 +23,14 @@ data:
     type: github # [github, s3]
     github:
     s3: # TODO: implement
+  target:
+    type: huggingface
+    local:
+    huggingface:
+      repo_id: ''
+      keep_local_archives: false
+      keep_local_jsonl: false
+
 
 docker:
   qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html

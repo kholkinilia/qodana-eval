@@ -28,15 +28,17 @@ data:
     local:
     huggingface:
       repo_id: ''
+      push_archives_dynamically: false
       keep_local_archives: false
       keep_local_jsonl: false
 
 
 docker:
+  create_container_timeout: 180
   qodana_image: # https://www.jetbrains.com/help/qodana/docker-images.html
-    java: 'jetbrains/qodana-jvm'
-    kotlin: 'jetbrains/qodana-jvm'
-    python: 'jetbrains/qodana-python'
+    java: 'docker.io/jetbrains/qodana-jvm'
+    kotlin: 'docker.io/jetbrains/qodana-jvm'
+    python: 'docker.io/jetbrains/qodana-python'
 
 operation:
   dirs:
@@ -51,3 +53,4 @@ operation:
 exit_codes:
   timeout: -127
   unknown_failure: -999
+  create_container_failure: -777

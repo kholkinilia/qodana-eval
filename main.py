@@ -2,7 +2,7 @@ import time
 import hydra
 import requests.exceptions
 from datasets import load_dataset
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, CommitOperationAdd
 from omegaconf import DictConfig
 from dotenv import load_dotenv
 import os
@@ -38,7 +38,7 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
     }
 
     # Setup a docker client
-    docker_client = docker.from_env()
+    docker_client = docker.from_env(timeout=cfg.docker.create_container_timeout)
 
     # Run a docker container
     volumes = {
@@ -61,6 +61,8 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
         json_result["exit_code"] = container_result["StatusCode"]
     except requests.exceptions.ConnectionError as e:
         json_result["exit_code"] = cfg.exit_codes.timeout
+    except requests.exceptions.ReadTimeout as e:
+        json_result["exit_code"] = cfg.exit_codes.create_container_failure
     except (docker.errors.ContainerError,
             docker.errors.ImageNotFound,
             docker.errors.APIError,
@@ -78,7 +80,7 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
     shutil.make_archive(result_archive_path[:-len('.zip')], 'zip', result_path)
 
     # Upload archive to huggingface if necessary
-    if cfg.data.target.type == "huggingface":
+    if cfg.data.target.type == "huggingface" and cfg.data.target.huggingface.push_archives_dynamically:
         api = HfApi()
 
         api.upload_file(
@@ -132,6 +134,36 @@ def main(cfg: DictConfig) -> None:
         # Remove jsonl if required
         if not cfg.data.target.huggingface.keep_local_jsonl:
             os.remove(jsonl_path)
+
+        # Push all archives at once
+        if not cfg.data.target.huggingface.push_archives_dynamically:
+            api = HfApi()
+
+            target_repo_dir = os.path.join('qodana_archives', cfg.data.language.type)
+
+            archives_to_upload = []
+            archives_dir = cfg.data.language[cfg.data.language.type].result_paths.qodana_archives
+            for archive_name in os.listdir(archives_dir):
+                archive_path = os.path.join(archives_dir, archive_name)
+                if archive_path.endswith(".zip"):
+                    target_path = os.path.join(target_repo_dir, archive_name)
+                    archives_to_upload.append((archive_path, target_path))
+
+            operations = [
+                CommitOperationAdd(target_path, open(archive_path, "rb").read())
+                for archive_path, target_path in archives_to_upload
+            ]
+
+            api.create_commit(
+                repo_id=cfg.data.target.huggingface.repo_id,
+                repo_type="dataset",
+                operations=operations,
+                commit_message="Add archive files"
+            )
+
+            if not cfg.data.target.huggingface.keep_local_archives:
+                for archive_path, _ in archives_to_upload:
+                    os.remove(archive_path)
 
         # Remove the empty repo, where archives were stored if it's indeed empty and if required
         if not cfg.data.target.huggingface.keep_local_archives and not any(

@@ -22,20 +22,23 @@ repo_prep_func = {
 
 
 def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
+    json_result = {
+        "exit_code": None,
+        "execution_time": 0.,
+        "result_archive_name": "",
+        "repo_name": repo_name,
+        "commit_sha": commit_sha,
+    }
+
     # Prepare a repository
     repo_filename = repo_prep_func[cfg.data.source.type](repo_name, commit_sha, cfg)
+    if not repo_filename:
+        json_result["exit_code"] = cfg.exit_codes.download_failure
+        return json_result
     repo_path = os.path.join(cfg.operation.dirs.repo_data, get_repo_dir_name(repo_name, commit_sha), repo_filename)
 
     result_path = str(os.path.join(cfg.operation.dirs.qodana_results, get_repo_dir_name(repo_name, commit_sha)))
     os.makedirs(result_path, exist_ok=True)
-
-    json_result = {
-        "exit_code": None,
-        "execution_time": None,
-        "result_archive_name": None,
-        "repo_name": repo_name,
-        "commit_sha": commit_sha,
-    }
 
     # Setup a docker client
     docker_client = docker.from_env(timeout=cfg.docker.create_container_timeout)
@@ -136,13 +139,13 @@ def main(cfg: DictConfig) -> None:
             os.remove(jsonl_path)
 
         # Push all archives at once
-        if not cfg.data.target.huggingface.push_archives_dynamically:
+        archives_dir = cfg.data.language[cfg.data.language.type].result_paths.qodana_archives
+        if not cfg.data.target.huggingface.push_archives_dynamically and os.path.exists(archives_dir):
             api = HfApi()
 
             target_repo_dir = os.path.join('qodana_archives', cfg.data.language.type)
 
             archives_to_upload = []
-            archives_dir = cfg.data.language[cfg.data.language.type].result_paths.qodana_archives
             for archive_name in os.listdir(archives_dir):
                 archive_path = os.path.join(archives_dir, archive_name)
                 if archive_path.endswith(".zip"):
@@ -166,9 +169,9 @@ def main(cfg: DictConfig) -> None:
                     os.remove(archive_path)
 
         # Remove the empty repo, where archives were stored if it's indeed empty and if required
-        if not cfg.data.target.huggingface.keep_local_archives and not any(
-                os.scandir(cfg.data.language[cfg.data.language.type].result_paths.qodana_archives)):
-            shutil.rmtree(cfg.data.language[cfg.data.language.type].result_paths.qodana_archives)
+        if not cfg.data.target.huggingface.keep_local_archives and os.path.exists(archives_dir) and not any(
+                os.scandir(archives_dir)):
+            shutil.rmtree(archives_dir)
 
     # Remove tmp dir and its contents
     shutil.rmtree(cfg.operation.dirs.tmp)

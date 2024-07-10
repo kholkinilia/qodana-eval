@@ -54,3 +54,4 @@ exit_codes:
   timeout: -127
   unknown_failure: -999
   create_container_failure: -777
+  download_failure: -666

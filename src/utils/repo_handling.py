@@ -60,7 +60,10 @@ def prepare_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
 
     # Download an archive
     archive_path = _get_archive_path(repo_name, commit_sha, cfg)
-    download_github_repo_zip(repo_name, commit_sha, archive_path)
+    is_downloaded = download_github_repo_zip(repo_name, commit_sha, archive_path)
+
+    if not is_downloaded:
+        return ""
 
     # Extract an archive
     extract_to = _get_repo_dir_path(repo_name, commit_sha, cfg)

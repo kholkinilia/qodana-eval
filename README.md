@@ -48,7 +48,3 @@ An example for one repo:
 The Qodana logs and results archives with names corresponding to those specified in the `.jsonl` results file.
 They are saved at the directory specified at `data.language.<language type>.result_paths.qodana_archives` in the config
 file.
-
-## Disclaimer
-
-Even though the example configs for python are provided, the script was not tested on Python language.

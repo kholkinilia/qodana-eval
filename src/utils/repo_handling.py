@@ -74,7 +74,8 @@ def prepare_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
     assert len(os.listdir(extract_to)) == 1  # There should be only the repo inside
 
     # Return the repo name of the project
-    return os.listdir(extract_to)[0]
+    project_dir_name = os.listdir(extract_to)[0]
+    return project_dir_name
 
 
 def clear_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
@@ -84,4 +85,4 @@ def clear_repo(repo_name: str, commit_sha: str, cfg: DictConfig):
 
     repo_dir = _get_repo_dir_path(repo_name, commit_sha, cfg)
     if os.path.exists(repo_dir):
-        shutil.rmtree(repo_dir)
+        shutil.rmtree(repo_dir, ignore_errors=True)

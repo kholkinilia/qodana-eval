@@ -56,6 +56,7 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
         container = docker_client.containers.run(image=cfg.docker.qodana_image[cfg.data.language.type],
                                                  volumes=volumes,
                                                  environment=environment,
+                                                 command='--profile-name=qodana.sanity',
                                                  detach=True,
                                                  remove=True,
                                                  )
@@ -171,10 +172,10 @@ def main(cfg: DictConfig) -> None:
         # Remove the empty repo, where archives were stored if it's indeed empty and if required
         if not cfg.data.target.huggingface.keep_local_archives and os.path.exists(archives_dir) and not any(
                 os.scandir(archives_dir)):
-            shutil.rmtree(archives_dir)
+            shutil.rmtree(archives_dir, ignore_errors=True)
 
     # Remove tmp dir and its contents
-    shutil.rmtree(cfg.operation.dirs.tmp)
+    shutil.rmtree(cfg.operation.dirs.tmp, ignore_errors=True)
 
 
 if __name__ == '__main__':

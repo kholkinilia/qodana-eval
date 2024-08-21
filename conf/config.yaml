@@ -1,8 +1,8 @@
 data:
   language:
-    type: python
+    type: kotlin
     kotlin:
-      repos_list_path: './data/kotlin/kotlin_repos.jsonl'
+      repos_list_path: './data/kotlin/kotlin_repos_with_scripts.jsonl'
       result_paths:
         qodana_archives: './data/kotlin/qodana_results'
         jsonl: './data/kotlin/results.jsonl'
@@ -19,12 +19,13 @@ data:
         qodana_archives: './data/python/qodana_results'
         jsonl: './data/python/results.jsonl'
       timeout: 600
+  use_bootstrap: true
   source:
     type: github # [github, s3]
     github:
     s3: # TODO: implement
   target:
-    type: huggingface
+    type: local
     local:
     huggingface:
       repo_id: 'JetBrains-Research/ai-agents-env-setup-eval'

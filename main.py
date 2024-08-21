@@ -21,7 +21,7 @@ repo_prep_func = {
 }
 
 
-def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
+def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig, bootstrap_script: str = None):
     json_result = {
         "exit_code": None,
         "execution_time": 0.,
@@ -36,6 +36,13 @@ def run_qodana(repo_name: str, commit_sha: str, cfg: DictConfig):
         json_result["exit_code"] = cfg.exit_codes.download_failure
         return json_result
     repo_path = os.path.join(cfg.operation.dirs.repo_data, get_repo_dir_name(repo_name, commit_sha), repo_filename)
+
+    # Add bootstrap script if needed
+    if bootstrap_script:
+        with open(os.path.join(repo_path, "qodana_bootstrap_script.sh"), 'w') as f:
+            f.write(bootstrap_script)
+        with open(os.path.join(repo_path, "qodana.yaml"), 'w') as f:
+            f.write("bootstrap: sh ./qodana_bootstrap_script.sh")
 
     result_path = str(os.path.join(cfg.operation.dirs.qodana_results, get_repo_dir_name(repo_name, commit_sha)))
     os.makedirs(result_path, exist_ok=True)
@@ -120,8 +127,14 @@ def main(cfg: DictConfig) -> None:
     os.makedirs(cfg.operation.dirs.json_results, exist_ok=True)
 
     # Run processes
-    json_results = process_map(run_qodana, repos['repo_name'].to_list(), repos['revision'].to_list(), repeat(cfg),
-                               **cfg.operation.pool_config)
+    if cfg.data.use_bootstrap:
+        json_results = process_map(run_qodana, repos['repo_name'].to_list(), repos['revision'].to_list(),
+                                   repeat(cfg), repos['script'].to_list(),
+                                   **cfg.operation.pool_config)
+    else:
+        json_results = process_map(run_qodana, repos['repo_name'].to_list(), repos['revision'].to_list(),
+                                   repeat(cfg),
+                                   **cfg.operation.pool_config)
 
     # Create jsonl file with results
     jsonl_path = cfg.data.language[cfg.data.language.type].result_paths.jsonl
